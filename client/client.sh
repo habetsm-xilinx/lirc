@@ -1,5 +1,5 @@
 #
-SERVER=${1:-mail}
+SERVER=${1:-192.168.0.1}
 
 Parser() {
     while read line;
