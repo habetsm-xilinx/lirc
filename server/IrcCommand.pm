@@ -16,7 +16,7 @@ my %nicks;
 
 sub set_nick {
     my ($nick, $value) = @_;
-    if (length($nick) gt 0) {
+    if (length($nick) > 0) {
 	#my $nv = $value || "undef";
 	#print STDERR "DEBUG: Nicks $nick is now $nv\n";
 	$nicks{$nick} = $value;
@@ -25,7 +25,7 @@ sub set_nick {
 
 sub part_channel {
     my ($self, $channel) = @_;
-    if (length($channel) eq 0) {
+    if (length($channel) == 0) {
 	return;
     }
 
