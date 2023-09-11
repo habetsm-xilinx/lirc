@@ -3,10 +3,8 @@
 use strict;
 use warnings;
 
-#use FindBin;
-#use lib "$FindBin::Bin/../lib";
+use lib ".";
 use MuxChatServer;
-#use LogLevels;
 
 my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($<);
 my $groupname  = getgrgid($<);
@@ -16,7 +14,7 @@ my %opt = (
     ipv		=> 4,
     log_file	=> 'Log::Log4perl',
     log4perl_conf => 'server.conf',
-    log_level	=> 3,
+    log_level	=> 4,
     #pid_file	=> ,
     user	=> $username,
     group	=> $groupname,

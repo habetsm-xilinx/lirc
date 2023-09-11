@@ -32,6 +32,19 @@ sub mux_connection {
     $self->broadcast($mux, "Please welcome $peer, who just joined us$EOL", $fh);
 }
 
+sub get_channel {
+    my ($self, $line) = @_;
+    my $channel =  $self->{channel} || "";
+
+    if (substr($line, 0, 1) eq '#') {
+	my @l = split(" ", $line);
+
+	$channel = shift @l;
+	$line = join(' ', @l);
+    }
+    return ($channel, $line);
+}
+
 sub handle_quit_command {
     my ($self) = @_;
     my $nick = $self->{nick} || "";
@@ -39,8 +52,45 @@ sub handle_quit_command {
 
     IrcCommand::part_channel($self, $channel);
     IrcCommand::set_nick($nick, undef);
-    #if (defined STDOUT
     close(STDOUT);
+}
+
+sub handle_bot_command {
+    my ($self, $line) = @_;
+
+    if (not substr($line, 0, 1) eq '@') {
+	return;
+    }
+
+    my @text2 = split(" ", $line);
+    my $bot = substr(shift @text2, 1);
+
+    # Invoke a bot
+    $bot .= ".sh";
+    open my $in, '<', $bot or return;
+    close $in;
+    my $cmd = "./" . $bot . " " . join(' ', @text2);
+    $self->log($DEBUG, "Invoking $cmd");
+    system($cmd);
+}
+
+sub log_line {
+    my ($self, $channel, $line) = @_;
+    my $peer = $self->{nick} || "$self->{peeraddr}:$self->{peerport}";
+
+    $self->log($INFO, "$peer($channel): $line");
+    if (length($channel) == 0) {
+	return;
+    }
+
+    # Append to the channel log
+    if ($channel =~ "^#*") {
+	$channel = substr($channel, 1);
+    }
+    $channel .= ".log";
+    open(my $out, '>>', $channel) or die "Could not open file '$channel'";
+    say $out "$peer: $line";
+    close $out;
 }
 
 sub mux_input  {
@@ -58,17 +108,18 @@ sub mux_input  {
 	    }
 	} else {
 	    my $peer = $self->{nick} || "$self->{peeraddr}:$self->{peerport}";
-	    my $ch = $self->{channel} || "";
+	    my ($ch, $line) = $self->get_channel($text);
 
-	    $self->log($INFO, "$peer($ch) said $text");
-	    if (defined $self->{channel}) {
-		$ch = "$self->{channel} ";
+	    $self->log_line($ch, $line);
+	    if ($line eq 'bye') {
+		$self->handle_quit_command;
+		return;
+	    }
+	    if ($ch ne "") {
+		$ch .= " ";
 	    }
 	    $self->broadcast($mux, "$peer: $ch$text$EOL", $fh);
-	    if ($text eq 'bye') {
-		$self->handle_quit_command;
-	    }
-	    # TODO: Invoke bots
+	    $self->handle_bot_command($line);
 	}
     }
 }
