@@ -16,10 +16,14 @@ my %nicks;
 
 sub set_nick {
     my ($nick, $value) = @_;
-    if (length($nick) > 0) {
-	#my $nv = $value || "undef";
-	#print STDERR "DEBUG: Nicks $nick is now $nv\n";
+    return unless (length($nick) > 0);
+
+    if (defined $value) {
 	$nicks{$nick} = $value;
+	print STDERR "DEBUG: Nicks $nick is now $value\n";
+    } else {
+	delete($nicks{$nick});
+	print STDERR "DEBUG: Removed nick $nick\n";
     }
 }
 
@@ -29,8 +33,7 @@ sub part_channel {
 	return;
     }
 
-    #my $nv = $value || "undef";
-    #print STDERR "DEBUG: Channels $channel is now $nv\n";
+    print STDERR "DEBUG: Somebody left channel $channel\n";
     $self->{channel} = undef;
     $channels{$channel}--;
 }
@@ -112,6 +115,7 @@ sub handle_irc_command {
 	my $reply = mk_msg($self->{nick}, "PART");
 	return $reply;
     }
+    # TODO: get history or log, help
     #print STDERR "Unhandled command: $cmd\n";
     return undef;
 }
