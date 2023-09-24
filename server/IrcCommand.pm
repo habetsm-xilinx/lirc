@@ -23,7 +23,7 @@ sub set_nick {
 	print STDERR "DEBUG: Nicks $nick is now $value\n";
     } else {
 	delete($nicks{$nick});
-	print STDERR "DEBUG: Removed nicks $nick\n";
+	print STDERR "DEBUG: Removed nick $nick\n";
     }
 }
 
@@ -113,6 +113,19 @@ sub handle_irc_command {
 
 	part_channel($self, $oldchannel);
 	my $reply = mk_msg($self->{nick}, "PART");
+	return $reply;
+    } elsif ($cmd eq 'HISTORY') {
+	open my $cmd,'lirc.log' or die $@;
+	my $line;
+	while (defined($line=<$cmd>)) {
+	    my $i = rindex $line, 'INFO', 0;
+	    if ($i == 0) {
+		print $line;
+	    }
+	}
+	close $cmd;
+
+	my $reply = mk_msg($self->{nick}, "End of HISTORY");
 	return $reply;
     }
     # TODO: get history or log, help
